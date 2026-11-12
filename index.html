@@ -1,0 +1,563 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>我的中文 – il mio cinese</title>
+<style>
+:root{--bg:#eef1ef;--panel:#fff;--ink:#16211d;--mute:#6b7773;--line:#d3dbd8;--acc:#0f6b5c;--on:#fff;--bad:#b3392f;color-scheme:light}
+@media(prefers-color-scheme:dark){:root{--bg:#111715;--panel:#1a2320;--ink:#e8efec;--mute:#92a19b;--line:#2c3834;--acc:#5fc2ad;--on:#0b1512;--bad:#ef8a80;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+.wrap{max-width:560px;margin:0 auto;padding:20px 16px 48px}
+header{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+h1{margin:0;font:600 26px "Songti SC","Noto Serif SC","STSong",serif}
+h1 small{display:block;font:italic 14px Georgia,serif;color:var(--mute)}
+#stat{font-size:13px;color:var(--mute);text-align:right}
+nav{display:flex;gap:4px;margin:18px 0 22px;border-bottom:1px solid var(--line)}
+nav button{flex:1;background:none;border:0;border-bottom:2px solid transparent;padding:10px 4px;font:inherit;font-size:15px;color:var(--mute);cursor:pointer}
+nav button.on{color:var(--ink);border-color:var(--acc);font-weight:600}
+button:focus-visible,input:focus-visible,label:focus-within{outline:2px solid var(--acc);outline-offset:2px}
+.bar{display:flex;gap:4px;margin-bottom:22px}
+.bar i{flex:1;height:6px;background:var(--line);border-radius:1px}
+.bar i.d{background:var(--ink)}.bar i.c{background:var(--acc)}
+.cell{display:grid;place-items:center;width:min(62vw,230px);aspect-ratio:1;margin:0 auto 18px;border:1.5px solid var(--acc);background:
+linear-gradient(var(--line),var(--line)) center/1px 100% no-repeat,
+linear-gradient(var(--line),var(--line)) center/100% 1px no-repeat,
+linear-gradient(to top right,transparent calc(50% - .5px),var(--line) calc(50% - .5px),var(--line) calc(50% + .5px),transparent calc(50% + .5px)),
+linear-gradient(to bottom right,transparent calc(50% - .5px),var(--line) calc(50% - .5px),var(--line) calc(50% + .5px),transparent calc(50% + .5px)),var(--panel)}
+.hz{font:clamp(96px,30vw,140px)/1 "Songti SC","Noto Serif SC","STSong",serif;color:var(--ink)}
+.spk{font-size:56px;color:var(--acc);cursor:pointer}
+.py{text-align:center;font-size:26px;color:var(--acc);font-weight:600}
+.mean{text-align:center;font:italic 22px Georgia,serif;margin:4px 0 14px}
+.mean.big{font-size:34px;margin:40px 0}
+dl{margin:14px 0 20px;display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:15px}
+dt{color:var(--mute)}dd{margin:0}
+.row{display:flex;gap:10px;justify-content:center;align-items:center;flex-wrap:wrap}
+.btn{font:inherit;font-size:16px;padding:11px 20px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:6px;cursor:pointer}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:var(--on)}
+.btn.no{color:var(--bad)}
+.btn.ic{border-radius:50%;width:44px;height:44px;padding:0}
+.hint{text-align:center;color:var(--mute);font-size:13px;margin-top:22px}
+.empty,.done{text-align:center;color:var(--mute);padding:40px 0}
+.done .big{font:600 56px "Songti SC",serif;color:var(--ink);margin:0}
+.menu{display:grid;gap:10px}
+.menu .btn{text-align:left;padding:16px}
+.menu small{display:block;color:var(--mute)}
+input[type=search]{width:100%;padding:11px 12px;font:inherit;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--ink);margin-bottom:12px}
+.item{display:grid;grid-template-columns:24px 48px 1fr auto;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.item.off{opacity:.45}
+.sw{width:22px;height:22px;margin:0;accent-color:var(--acc);cursor:pointer}
+.btn.sm{padding:6px 12px;font-size:14px}
+.tools.top{margin:0 0 12px;align-items:center;flex-wrap:wrap}
+#cnt{flex:1;font-size:14px;color:var(--mute)}
+.srch{display:flex;gap:8px;margin-bottom:12px}
+.srch input[type=search]{flex:1;width:auto;margin:0}
+.srch select{padding:0 10px;font:inherit;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--ink)}
+.hint.tight{text-align:left;margin:0 0 12px}
+form.edit{display:grid;gap:10px;padding:14px;margin:10px 0;border:1px solid var(--acc);border-radius:6px;background:var(--panel)}
+form.edit label{display:grid;gap:4px;font-size:13px;color:var(--mute)}
+form.edit input{padding:9px 10px;font:inherit;font-size:16px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)}
+.item .h{font:30px "Songti SC","Noto Serif SC",serif;text-align:center}
+.item b{color:var(--acc);font-weight:600}
+.item span{color:var(--mute);font-size:14px}
+.item em{font-size:12px;color:var(--mute);font-style:normal}
+.item em.ko{color:var(--bad)}
+.tools{display:flex;gap:10px;margin-top:22px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>我的中文<small>il mio cinese</small></h1>
+  <div id="stat"></div>
+</header>
+<nav>
+  <button data-tab="learn">Impara</button>
+  <button data-tab="review">Ripasso</button>
+  <button data-tab="list">Elenco</button>
+  <button data-tab="play">Playground</button>
+</nav>
+<main id="app"></main>
+</div>
+
+<script>
+/* Per aggiungere parole: nuova riga in WORDS con h (carattere), p (pinyin), m (significato), c (componenti), t (tratti), k (trucco) */
+const DEFAULT_WORDS=[
+{h:"她",p:"tā",m:"lei",c:"女 + 也",t:6,k:"Come 他 ma con donna (女) al posto di persona"},
+{h:"们",p:"men",m:"(plurale di persone)",c:"亻 + 门",t:5,k:"Persone (亻) davanti a una porta (门): un gruppo"},
+{h:"吗",p:"ma",m:"particella di domanda",c:"口 + 马",t:6,k:"Una bocca (口) che chiede: \"è un cavallo (马)?\""},
+{h:"很",p:"hěn",m:"molto",c:"彳 + 艮",t:9,k:"彳 è un piede che cammina: andare \"molto\" lontano"},
+{h:"也",p:"yě",m:"anche",c:"(da solo)",t:3,k:"Lo avevi già visto dentro 他: sembra un serpente che si aggiunge"},
+{h:"都",p:"dōu",m:"tutti, tutto",c:"者 + 阝",t:10,k:"Una città (阝) piena di gente: ci sono tutti"},
+{h:"爸",p:"bà",m:"papà",c:"父 + 巴",t:8,k:"父 = padre, 巴 dà il suono ba"},
+{h:"妈",p:"mā",m:"mamma",c:"女 + 马",t:6,k:"Donna (女) + 马 che dà il suono ma"},
+{h:"大",p:"dà",m:"grande",c:"(da solo)",t:3,k:"Una persona con le braccia aperte: \"grande così!\""},
+{h:"小",p:"xiǎo",m:"piccolo",c:"(da solo)",t:3,k:"Tre puntini: poca roba"},
+{h:"我",p:"wǒ",m:"io",c:"手 + 戈",t:7,k:"Una mano che regge un'arma: \"io\" mi difendo"},
+{h:"你",p:"nǐ",m:"tu",c:"亻 (persona) + 尔",t:7,k:"Persona + \"quello lì\": la persona davanti a me"},
+{h:"他",p:"tā",m:"lui",c:"亻 + 也",t:5,k:"Persona + 也: un'altra persona"},
+{h:"好",p:"hǎo",m:"buono, bene",c:"女 + 子",t:6,k:"Donna + bambino: la cosa più bella"},
+{h:"是",p:"shì",m:"essere",c:"日 + 疋",t:9,k:"Il sole (日) sopra, la verità è chiara"},
+{h:"不",p:"bù",m:"non",c:"一 + 丿 + 丨 + 丶",t:4,k:"Un uccello che non riesce a volare"},
+{h:"人",p:"rén",m:"persona",c:"人",t:2,k:"Due gambe: una persona che cammina"},
+{h:"中",p:"zhōng",m:"centro, Cina",c:"口 + 丨",t:4,k:"Una freccia che colpisce il centro del bersaglio"},
+{h:"国",p:"guó",m:"paese",c:"囗 + 玉",t:8,k:"Un recinto (囗) con dentro un gioiello (玉)"},
+{h:"学",p:"xué",m:"studiare",c:"冖 + 子",t:8,k:"Un bambino (子) sotto un tetto: va a scuola"}
+];
+/* Lista HSK1 completa: carattere|pinyin|significato (componenti, tratti e trucco si aggiungono dall'Elenco) */
+const EXTRA=String.raw`爱|ài|amare
+八|bā|otto
+爸爸|bàba|papà
+吧|ba|particella di suggerimento o conferma
+白天|báitiān|giorno, di giorno
+百|bǎi|cento
+半|bàn|metà, mezzo
+包子|bāozi|panino ripieno al vapore
+杯子|bēizi|tazza, bicchiere
+本|běn|classificatore dei libri
+边|biān|lato; suffisso di direzione
+病|bìng|malattia; essere malato
+不客气|bú kèqi|prego, di niente
+不要|bú yào|non volere, non fare
+菜|cài|verdura, piatto
+茶|chá|tè
+唱|chàng|cantare
+超市|chāoshì|supermercato
+车|chē|veicolo, auto
+吃|chī|mangiare
+出租车|chūzūchē|taxi
+穿|chuān|indossare
+打电话|dǎ diànhuà|telefonare
+大家|dàjiā|tutti
+大学|dàxué|università
+大学生|dàxuéshēng|studente universitario
+到|dào|arrivare
+的|de|particella possessiva o di modifica
+第|dì|prefisso dei numeri ordinali
+弟弟|dìdi|fratello minore
+点|diǎn|punto; ora, classificatore
+店|diàn|negozio
+电话|diànhuà|telefono, telefonata
+电脑|diànnǎo|computer
+电视|diànshì|televisione
+电影|diànyǐng|film
+电影院|diànyǐngyuàn|cinema
+东西|dōngxi|cosa, oggetto
+读|dú|leggere
+读书|dúshū|leggere un libro, studiare
+对|duì|giusto, corretto; verso, a
+对不起|duìbuqǐ|scusa, mi dispiace
+多|duō|molto, tanto; più di
+多少|duōshao|quanto, quanti
+儿子|érzi|figlio
+二|èr|due
+饭|fàn|riso cotto, pasto
+饭店|fàndiàn|ristorante
+房间|fángjiān|stanza
+非常|fēicháng|molto, estremamente
+飞机|fēijī|aereo
+分|fēn|minuto; dividere; parte
+分钟|fēnzhōng|minuto
+高兴|gāoxìng|felice, contento
+歌|gē|canzone
+哥哥|gēge|fratello maggiore
+个|gè|classificatore generico
+给|gěi|dare; a, per
+公司|gōngsī|azienda
+工作|gōngzuò|lavoro; lavorare
+狗|gǒu|cane
+贵|guì|caro, costoso
+还|hái|ancora, anche; piuttosto
+孩子|háizi|bambino
+汉语|Hànyǔ|lingua cinese
+汉字|Hànzì|carattere cinese
+好吃|hǎochī|buono da mangiare
+好看|hǎokàn|bello da vedere
+好听|hǎotīng|piacevole da ascoltare
+好玩儿|hǎowánr|divertente
+号|hào|numero; giorno del mese
+喝|hē|bere
+和|hé|e, con
+后|hòu|dietro, dopo
+回|huí|tornare
+会|huì|sapere, essere capace di
+火车|huǒchē|treno
+鸡蛋|jīdàn|uovo
+几|jǐ|quanti, alcuni
+家|jiā|casa, famiglia
+家人|jiārén|familiare
+见|jiàn|vedere, incontrare
+件|jiàn|classificatore di indumenti e faccende
+饺子|jiǎozi|ravioli
+叫|jiào|chiamarsi, chiamare
+姐姐|jiějie|sorella maggiore
+今年|jīnnián|quest'anno
+今天|jīntiān|oggi
+九|jiǔ|nove
+觉得|juéde|sentire, pensare
+开|kāi|aprire
+开车|kāichē|guidare
+看|kàn|guardare, vedere
+看病|kànbìng|andare dal medico
+看见|kànjiàn|vedere
+可以|kěyǐ|potere; va bene
+课|kè|lezione
+口|kǒu|bocca; classificatore dei membri della famiglia
+块|kuài|pezzo; yuan, denaro
+来|lái|venire
+老师|lǎoshī|insegnante
+了|le|particella di azione compiuta
+冷|lěng|freddo
+里|lǐ|dentro
+两|liǎng|due
+零|líng|zero
+六|liù|sei
+妈妈|māma|mamma
+买|mǎi|comprare
+卖|mài|vendere
+忙|máng|occupato
+猫|māo|gatto
+没关系|méi guānxi|non fa niente
+没事|méi shì|niente, non è nulla
+没有|méiyǒu|non avere
+妹妹|mèimei|sorella minore
+米饭|mǐfàn|riso cotto
+面包|miànbāo|pane
+面条儿|miàntiáor|noodles
+明年|míngnián|l'anno prossimo
+明天|míngtiān|domani
+名字|míngzi|nome
+哪|nǎ|quale
+哪个|nǎge|quale
+哪里|nǎlǐ|dove
+哪儿|nǎr|dove
+哪些|nǎxiē|quali, plurale
+那|nà|quello; allora
+那边|nàbiān|laggiù
+那个|nàge|quello
+那里|nàlǐ|là
+那儿|nàr|là
+那些|nàxiē|quelli
+男|nán|maschio
+男朋友|nánpéngyou|ragazzo, fidanzato
+呢|ne|particella interrogativa o di continuazione
+能|néng|potere
+你好|nǐ hǎo|ciao, buongiorno
+你们|nǐmen|voi
+年|nián|anno
+您|nín|Lei, forma di cortesia
+牛奶|niúnǎi|latte
+女|nǚ|femmina
+女儿|nǚ'ér|figlia
+女朋友|nǚpéngyou|ragazza, fidanzata
+女士|nǚshì|signora
+朋友|péngyou|amico
+便宜|piányi|economico
+漂亮|piàoliang|bello
+苹果|píngguǒ|mela
+七|qī|sette
+起床|qǐchuáng|alzarsi
+千|qiān|mille
+前|qián|davanti, prima
+钱|qián|soldi
+请|qǐng|prego, per favore
+请问|qǐngwèn|posso chiedere
+去|qù|andare
+去年|qùnián|l'anno scorso
+热|rè|caldo
+认识|rènshi|conoscere
+日|rì|giorno; sole
+三|sān|tre
+商店|shāngdiàn|negozio
+上|shàng|su, sopra; salire
+上班|shàngbān|andare al lavoro
+上课|shàngkè|andare a lezione
+上午|shàngwǔ|mattina
+上学|shàngxué|andare a scuola
+少|shǎo|poco
+谁|shuí|chi
+什么|shénme|che cosa
+生病|shēngbìng|ammalarsi
+十|shí|dieci
+时候|shíhou|momento
+时间|shíjiān|tempo
+事|shì|faccenda, cosa
+手机|shǒujī|cellulare
+书|shū|libro
+书店|shūdiàn|libreria
+水|shuǐ|acqua
+水果|shuǐguǒ|frutta
+睡|shuì|dormire
+睡觉|shuìjiào|dormire
+说|shuō|parlare, dire
+说话|shuōhuà|parlare
+四|sì|quattro
+岁|suì|anni di età
+它|tā|esso, cosa o animale
+他们|tāmen|loro, maschile
+它们|tāmen|essi, cose o animali
+她们|tāmen|loro, femminile
+太|tài|troppo, molto
+天|tiān|giorno; cielo
+天气|tiānqì|tempo meteorologico
+听|tīng|ascoltare
+听见|tīngjiàn|sentire
+同学|tóngxué|compagno di classe
+外|wài|fuori
+外边|wàibian|fuori
+玩|wán|giocare
+晚|wǎn|tardi
+晚饭|wǎnfàn|cena
+晚上|wǎnshang|sera
+喂|wèi|pronto, al telefono
+问|wèn|chiedere
+问题|wèntí|domanda, problema
+我们|wǒmen|noi
+五|wǔ|cinque
+午饭|wǔfàn|pranzo
+喜欢|xǐhuan|piacere, amare
+下|xià|giù, sotto; scendere
+下雨|xiàyǔ|piovere
+下班|xiàbān|uscire dal lavoro
+下课|xiàkè|finire la lezione
+下午|xiàwǔ|pomeriggio
+先生|xiānsheng|signore, marito
+现在|xiànzài|adesso
+想|xiǎng|pensare; volere
+小朋友|xiǎopéngyou|bambino
+小时|xiǎoshí|ora, durata
+小学|xiǎoxué|scuola elementare
+小学生|xiǎoxuéshēng|alunno delle elementari
+些|xiē|alcuni, quantità indefinita
+写|xiě|scrivere
+谢谢|xièxie|grazie
+新|xīn|nuovo
+星期|xīngqī|settimana
+星期日|xīngqīrì|domenica
+星期天|xīngqītiān|domenica
+休息|xiūxi|riposare
+学生|xuésheng|studente
+学习|xuéxí|studiare
+学校|xuéxiào|scuola
+雪|xuě|neve
+要|yào|volere, aver bisogno di
+一|yī|uno
+衣服|yīfu|vestiti
+医生|yīshēng|medico
+医院|yīyuàn|ospedale
+一半|yíbàn|metà
+一下|yíxià|un po', un attimo
+椅子|yǐzi|sedia
+一点儿|yìdiǎnr|un po'
+一些|yìxiē|alcuni, qualche
+有|yǒu|avere, esserci
+有的|yǒude|alcuni di loro
+有点儿|yǒudiǎnr|un po', leggermente
+有些|yǒuxiē|alcuni; piuttosto
+雨|yǔ|pioggia
+元|yuán|yuan
+月|yuè|mese; luna
+再|zài|di nuovo, poi
+在|zài|essere a; a, in; stare facendo
+再见|zàijiàn|arrivederci
+早|zǎo|presto
+早饭|zǎofàn|colazione
+早上|zǎoshang|mattina presto
+怎么|zěnme|come
+怎么样|zěnmeyàng|come va, che ne pensi
+找|zhǎo|cercare
+这|zhè|questo
+这边|zhèbiān|qui
+这个|zhège|questo
+这里|zhèlǐ|qui
+这儿|zhèr|qui
+这些|zhèxiē|questi
+真|zhēn|davvero; vero
+正在|zhèngzài|stare facendo
+只|zhī|classificatore degli animali
+知道|zhīdào|sapere
+中国|Zhōngguó|Cina
+中文|Zhōngwén|lingua cinese
+中午|zhōngwǔ|mezzogiorno
+中学|zhōngxué|scuola media o superiore
+中学生|zhōngxuéshēng|studente di medie o superiori
+住|zhù|abitare
+桌子|zhuōzi|tavolo
+字|zì|carattere, scrittura
+昨天|zuótiān|ieri
+坐|zuò|sedersi
+做|zuò|fare
+做饭|zuòfàn|cucinare`.trim().split("\n").map(l=>{const a=l.split("|");return {h:a[0],p:a[1],m:a[2],c:"",t:"",k:""}});
+
+const KEY="mio-cinese-v2",$=s=>document.querySelector(s),app=$("#app");
+let DB=null;try{DB=JSON.parse(localStorage.getItem(KEY))}catch(e){}
+if(!DB||!Array.isArray(DB.words)){
+  let old={};try{old=JSON.parse(localStorage.getItem("mio-cinese-v1")||"{}")}catch(e){}
+  DB={words:DEFAULT_WORDS.map(w=>({...w,on:true})),prog:old,v:2};
+}
+DB.prog=DB.prog||{};
+if((DB.v||2)<3){
+  const have=new Set(DB.words.map(w=>w.h));
+  EXTRA.forEach(w=>{if(!have.has(w.h)){DB.words.push({...w,on:false});have.add(w.h)}});
+  DB.v=3;
+}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(DB))}catch(e){}};
+const act=()=>DB.words.filter(w=>w.on);
+const g=id=>DB.prog[id]||{seen:0,right:0,wrong:0,streak:0};
+const esc=s=>String(s==null?"":s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;");
+const shuffle=a=>a.map(x=>[Math.random(),x]).sort((a,b)=>a[0]-b[0]).map(x=>x[1]);
+const say=t=>{if(!("speechSynthesis" in window))return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang="zh-CN";u.rate=.8;speechSynthesis.speak(u)};
+
+let tab="learn",Q=[],i=0,shown=false,mode="hz",score=0,qv="",flt="all",editing=null;
+
+function go(t,m){
+  tab=t;Q=[];i=0;shown=false;score=0;editing=null;
+  if(t==="learn"){mode="hz";Q=act().filter(w=>!g(w.h).seen).slice(0,10)}
+  else if(t==="review"){mode="hz";Q=shuffle(act().filter(w=>{const s=g(w.h);return s.wrong>0&&s.streak<2}))}
+  else if(t==="play"&&m){mode=m;Q=shuffle(act()).slice(0,10)}
+  render();
+}
+
+function stat(){
+  const a=act(),seen=a.filter(w=>g(w.h).seen).length;
+  $("#stat").textContent=seen+" viste · "+(a.length-seen)+" da vedere";
+}
+
+function render(){
+  document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.tab===tab));
+  stat();
+  if(tab==="list")return list();
+  if(tab==="play"&&!Q.length)return playMenu();
+  session();
+}
+
+function noActive(){return `<p class="empty">Nessuna parola attiva. Accendi quelle che conosci nell'Elenco.</p>`}
+
+function playMenu(){
+  if(!act().length){app.innerHTML=noActive();return}
+  app.innerHTML=`<div class="menu">
+  <button class="btn" data-m="hz">Cinese → italiano<small>Leggi il carattere e ricorda il significato</small></button>
+  <button class="btn" data-m="it">Italiano → cinese<small>Vedi il significato e ricorda il carattere</small></button>
+  <button class="btn" data-m="audio">Solo audio<small>Ascolta e riconosci la parola</small></button></div>`;
+}
+
+function session(){
+  if(!act().length){app.innerHTML=noActive();return}
+  if(!Q.length){app.innerHTML=`<p class="empty">${tab==="learn"?"Hai già visto tutte le parole attive. Prova il ripasso.":"Nessuna parola da ripassare: non hai errori recenti."}</p>`;return}
+  const w=Q[i];
+  if(!w){app.innerHTML=`<div class="done"><p class="big">${score} / ${Q.length}</p><p>indovinate</p><button class="btn pri" data-act="again">Ancora</button></div>`;return}
+  const bar=Q.map((_,k)=>`<i class="${k<i?"d":k===i?"c":""}"></i>`).join("");
+  const cell=(mode==="hz"||shown)?`<div class="cell"><span class="hz">${esc(w.h)}</span></div>`:mode==="audio"?`<button class="cell spk" data-act="say" aria-label="Riascolta">♪</button>`:"";
+  const mean=(mode==="it"||shown)?`<div class="mean${shown?"":" big"}">${esc(w.m)}</div>`:"";
+  const rows=[["Componenti",w.c],["Tratti",w.t],["Trucco",w.k]].filter(r=>r[1]!==""&&r[1]!=null).map(r=>`<dt>${r[0]}</dt><dd>${esc(r[1])}</dd>`).join("");
+  const back=shown?`<div class="py">${esc(w.p)}</div>${rows?`<dl>${rows}</dl>`:""}`:"";
+  const btns=shown
+    ?`<div class="row"><button class="btn ic" data-act="say" aria-label="Ascolta">♪</button><button class="btn no" data-act="ko">Sbagliato</button><button class="btn pri" data-act="ok">Indovinato</button></div>`
+    :`<div class="row"><button class="btn ic" data-act="say" aria-label="Ascolta">♪</button><button class="btn pri" data-act="show">Scopri</button></div>`;
+  app.innerHTML=`<div class="bar">${bar}</div>${cell}${mean}${back}${btns}<p class="hint">spazio scopri · 1 sbagliato · 2 indovinato · A ascolta</p>`;
+  if(mode==="audio"&&!shown)setTimeout(()=>say(w.h),150);
+}
+
+function answer(ok){
+  const w=Q[i],s=DB.prog[w.h]=Object.assign({seen:0,right:0,wrong:0,streak:0},DB.prog[w.h]);
+  s.seen=1;
+  if(ok){s.right++;s.streak++;score++}else{s.wrong++;s.streak=0}
+  save();i++;shown=false;render();
+}
+
+function row(w,k){
+  const s=g(w.h);
+  const st=!s.seen?"<em>nuova</em>":(s.wrong>0&&s.streak<2?`<em class="ko">da ripassare</em>`:`<em>${s.right} ok</em>`);
+  return `<div class="item${w.on?"":" off"}"><input type="checkbox" class="sw" data-tog="${k}" ${w.on?"checked":""} aria-label="Attiva ${esc(w.h)}"><div class="h">${esc(w.h)}</div><div><b>${esc(w.p)}</b> <span>${esc(w.m)}</span><br>${st}</div><button class="btn sm" data-edit="${k}">Modifica</button></div>`;
+}
+
+function form(w,k){
+  const f=(n,l,x)=>`<label>${l}<input data-f="${n}" value="${esc(w[n])}" ${x||""}></label>`;
+  return `<form class="edit" onsubmit="return false">${f("h","Carattere")}${f("p","Pinyin")}${f("m","Significato")}${f("c","Componenti")}${f("t","Tratti",'inputmode="numeric"')}${f("k","Trucco")}
+  <div class="row"><button type="button" class="btn pri" data-act="saveedit" data-k="${k}">Salva</button><button type="button" class="btn" data-act="cancel">Annulla</button>${k==="new"?"":`<button type="button" class="btn no" data-act="del" data-k="${k}">Elimina</button>`}</div></form>`;
+}
+
+function cnt(){const c=$("#cnt");if(c)c.textContent=act().length+" su "+DB.words.length+" attive"}
+
+function visible(){
+  const q=qv.trim().toLowerCase();
+  return DB.words.map((w,k)=>({w,k})).filter(({w})=>(!q||(w.h+w.p+w.m).toLowerCase().includes(q))&&(flt==="all"||(flt==="on")===!!w.on));
+}
+
+function drawList(){
+  let html=editing==="new"?form({h:"",p:"",m:"",c:"",t:"",k:""},"new"):"";
+  html+=visible().map(({w,k})=>editing===k?form(w,k):row(w,k)).join("");
+  $("#rows").innerHTML=html||`<p class="empty">Nessun risultato.</p>`;
+  cnt();
+}
+
+function list(){
+  app.innerHTML=`<div class="srch"><input type="search" id="q" placeholder="Cerca carattere, pinyin o significato"><select id="flt" aria-label="Filtro"><option value="all">Tutte</option><option value="on">Accese</option><option value="off">Spente</option></select></div>
+  <p class="hint tight">Accendi solo le parole che hai già imparato: Impara, Ripasso e Playground useranno solo quelle. "Tutte on" e "Tutte off" agiscono sulle parole mostrate dalla ricerca e dal filtro.</p>
+  <div class="tools top"><span id="cnt"></span><button class="btn sm" data-act="allon">Tutte on</button><button class="btn sm" data-act="alloff">Tutte off</button><button class="btn sm pri" data-act="add">Aggiungi</button></div>
+  <div id="rows"></div>
+  <div class="tools"><button class="btn" data-act="export">Salva progressi</button><label class="btn">Carica<input type="file" id="imp" accept=".json" hidden></label></div>`;
+  $("#q").value=qv;$("#q").oninput=e=>{qv=e.target.value;drawList()};
+  $("#flt").value=flt;$("#flt").onchange=e=>{flt=e.target.value;drawList()};
+  drawList();
+  $("#imp").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();
+    r.onload=()=>{try{const d=JSON.parse(r.result);if(Array.isArray(d.words)){DB=d;DB.prog=DB.prog||{}}else DB.prog=d;save();render()}catch(x){alert("File non valido: serve un JSON salvato da questo sito.")}};r.readAsText(f)};
+}
+
+function exportData(){
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(DB,null,1)],{type:"application/json"}));
+  a.download="progressi-cinese.json";a.click();
+}
+
+function saveEdit(btn){
+  const f=btn.closest("form"),v={};
+  f.querySelectorAll("[data-f]").forEach(x=>v[x.dataset.f]=x.value.trim());
+  if(!v.h||!v.m){alert("Servono almeno il carattere e il significato.");return}
+  const idx=btn.dataset.k==="new"?-1:Number(btn.dataset.k);
+  if(DB.words.some((w,n)=>w.h===v.h&&n!==idx)){alert("Questo carattere è già nell'elenco.");return}
+  const nw={h:v.h,p:v.p,m:v.m,c:v.c,t:Number(v.t)||v.t,k:v.k};
+  if(idx<0)DB.words.push({...nw,on:true});
+  else{
+    const old=DB.words[idx];
+    if(old.h!==v.h&&DB.prog[old.h]){DB.prog[v.h]=DB.prog[old.h];delete DB.prog[old.h]}
+    DB.words[idx]={...nw,on:old.on};
+  }
+  save();editing=null;render();
+}
+
+document.addEventListener("click",e=>{
+  const t=e.target.closest("[data-tab],[data-m],[data-act],[data-edit]");if(!t)return;
+  if(t.dataset.tab)return go(t.dataset.tab);
+  if(t.dataset.m)return go("play",t.dataset.m);
+  if(t.dataset.edit!==undefined){editing=Number(t.dataset.edit);return drawList()}
+  const a=t.dataset.act;
+  if(a==="show"){shown=true;render()}
+  else if(a==="ok")answer(true);
+  else if(a==="ko")answer(false);
+  else if(a==="say"&&Q[i])say(Q[i].h);
+  else if(a==="again")go(tab,mode);
+  else if(a==="export")exportData();
+  else if(a==="add"){editing="new";drawList();window.scrollTo(0,0)}
+  else if(a==="cancel"){editing=null;drawList()}
+  else if(a==="saveedit")saveEdit(t);
+  else if(a==="del"){const k=Number(t.dataset.k);if(confirm("Eliminare "+DB.words[k].h+" dall'elenco?")){delete DB.prog[DB.words[k].h];DB.words.splice(k,1);save();editing=null;render()}}
+  else if(a==="allon"||a==="alloff"){visible().forEach(({w})=>w.on=a==="allon");save();stat();drawList()}
+});
+document.addEventListener("change",e=>{
+  const c=e.target.closest("[data-tog]");if(!c)return;
+  DB.words[Number(c.dataset.tog)].on=c.checked;save();
+  c.closest(".item").classList.toggle("off",!c.checked);cnt();stat();
+});
+document.addEventListener("keydown",e=>{
+  if(e.target.tagName==="INPUT"||!Q[i]||tab==="list")return;
+  if(e.key===" "&&!shown){e.preventDefault();shown=true;render()}
+  else if(shown&&e.key==="1")answer(false);
+  else if(shown&&e.key==="2")answer(true);
+  else if(e.key.toLowerCase()==="a")say(Q[i].h);
+});
+go("learn");
+</script>
+</body>
+</html>
