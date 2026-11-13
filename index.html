@@ -5,18 +5,19 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>我的中文 – il mio cinese</title>
 <style>
-:root{--bg:#eef1ef;--panel:#fff;--ink:#16211d;--mute:#6b7773;--line:#d3dbd8;--acc:#0f6b5c;--on:#fff;--bad:#b3392f;color-scheme:light}
-@media(prefers-color-scheme:dark){:root{--bg:#111715;--panel:#1a2320;--ink:#e8efec;--mute:#92a19b;--line:#2c3834;--acc:#5fc2ad;--on:#0b1512;--bad:#ef8a80;color-scheme:dark}}
+:root{--bg:#eef1ef;--panel:#fff;--ink:#16211d;--mute:#6b7773;--line:#d3dbd8;--acc:#0f6b5c;--on:#fff;--bad:#b3392f;--hard:#b5791f;--easy:#3d8b52;color-scheme:light}
+@media(prefers-color-scheme:dark){:root{--bg:#111715;--panel:#1a2320;--ink:#e8efec;--mute:#92a19b;--line:#2c3834;--acc:#5fc2ad;--on:#0b1512;--bad:#ef8a80;--hard:#e0a94e;--easy:#7fd39a;color-scheme:dark}}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
 .wrap{max-width:560px;margin:0 auto;padding:20px 16px 48px}
 header{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
 h1{margin:0;font:600 26px "Songti SC","Noto Serif SC","STSong",serif}
 h1 small{display:block;font:italic 14px Georgia,serif;color:var(--mute)}
-#stat{font-size:13px;color:var(--mute);text-align:right}
+#stat{font-size:13px;color:var(--mute);text-align:right;line-height:1.35}
 nav{display:flex;gap:4px;margin:18px 0 22px;border-bottom:1px solid var(--line)}
-nav button{flex:1;background:none;border:0;border-bottom:2px solid transparent;padding:10px 4px;font:inherit;font-size:15px;color:var(--mute);cursor:pointer}
+nav button{flex:1;background:none;border:0;border-bottom:2px solid transparent;padding:10px 4px;font:inherit;font-size:15px;color:var(--mute);cursor:pointer;position:relative}
 nav button.on{color:var(--ink);border-color:var(--acc);font-weight:600}
+nav button .badge{display:inline-block;min-width:18px;height:18px;line-height:18px;padding:0 5px;margin-left:4px;border-radius:9px;background:var(--acc);color:var(--on);font-size:11px;font-weight:600;vertical-align:middle}
 button:focus-visible,input:focus-visible,label:focus-within{outline:2px solid var(--acc);outline-offset:2px}
 .bar{display:flex;gap:4px;margin-bottom:22px}
 .bar i{flex:1;height:6px;background:var(--line);border-radius:1px}
@@ -64,6 +65,14 @@ form.edit input{padding:9px 10px;font:inherit;font-size:16px;border:1px solid va
 .item em{font-size:12px;color:var(--mute);font-style:normal}
 .item em.ko{color:var(--bad)}
 .tools{display:flex;gap:10px;margin-top:22px}
+/* --- Spaced repetition --- */
+.sr-btns{flex-wrap:wrap;gap:8px}
+.sr-btns .btn{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:76px;padding:8px 10px;font-size:15px}
+.sr-btns .btn small{font-size:11px;color:var(--mute);font-weight:400}
+.sr-again{color:var(--bad);border-color:var(--bad)}
+.sr-hard{border-color:var(--hard);color:var(--hard)}
+.sr-good{border-color:var(--acc);color:var(--acc)}
+.sr-easy{border-color:var(--easy);color:var(--easy)}
 </style>
 </head>
 <body>
@@ -404,28 +413,107 @@ if((DB.v||2)<3){
 }
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(DB))}catch(e){}};
 const act=()=>DB.words.filter(w=>w.on);
-const g=id=>DB.prog[id]||{seen:0,right:0,wrong:0,streak:0};
 const esc=s=>String(s==null?"":s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;");
 const shuffle=a=>a.map(x=>[Math.random(),x]).sort((a,b)=>a[0]-b[0]).map(x=>x[1]);
 const say=t=>{if(!("speechSynthesis" in window))return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang="zh-CN";u.rate=.8;speechSynthesis.speak(u)};
 
+/* ---- Spaced repetition (SM-2 semplificato, 4 gradi) ---- */
+const DAY=86400000;
+const SR={again:0,hard:1,good:2,easy:3};
+const DEFAULT_SR=()=>({seen:0,right:0,wrong:0,streak:0,due:0,ivl:0,ease:2.5,reps:0,lapses:0});
+
+const g=id=>{
+  const p=DB.prog[id]||{};
+  if(p.due===undefined){
+    p.due=0;p.ivl=0;p.ease=2.5;p.reps=0;p.lapses=0;
+    if(p.seen && !(p.wrong>0 && p.streak<2)) p.due=Date.now()+DAY;
+    DB.prog[id]=p;
+  }
+  return p;
+};
+const isDue=p=>p.seen && p.due<=Date.now();
+
+function schedule(p,grade){
+  p.reps=p.reps||0; p.ease=p.ease||2.5; p.ivl=p.ivl||0;
+  if(grade===SR.again){
+    p.lapses=(p.lapses||0)+1;
+    p.reps=0;
+    p.ivl=0;
+    p.ease=Math.max(1.3,p.ease-0.2);
+    p.wrong=(p.wrong||0)+1; p.streak=0;
+    p.due=Date.now();
+  }else{
+    p.right=(p.right||0)+1; p.streak=(p.streak||0)+1;
+    if(p.ivl===0){
+      p.ivl=1;
+    }else{
+      const mult = grade===SR.hard?1.2 : grade===SR.easy?1.3*p.ease : p.ease;
+      p.ivl=Math.max(1,Math.round(p.ivl*mult));
+    }
+    if(grade===SR.easy) p.ease+=0.15;
+    if(grade===SR.hard) p.ease=Math.max(1.3,p.ease-0.15);
+    p.ease=Math.min(3.0,p.ease);
+    p.reps++;
+    p.due=Date.now()+p.ivl*DAY;
+  }
+  p.seen=1;
+  return p;
+}
+
+function ivlLabel(h,grade){
+  const p=Object.assign(DEFAULT_SR(),DB.prog[h]);
+  const copy={...p};
+  schedule(copy,grade);
+  if(copy.ivl===0) return "adesso";
+  if(copy.ivl===1) return "1 g";
+  if(copy.ivl<30)  return copy.ivl+" g";
+  return Math.round(copy.ivl/30)+" mesi";
+}
+
+function nextDueLabel(p){
+  if(!p.seen) return "<em>nuova</em>";
+  if(p.due<=Date.now()) return '<em class="ko">da ripassare</em>';
+  const d=Math.ceil((p.due-Date.now())/DAY);
+  return `<em>tra ${d} g</em>`;
+}
+
+function dueCount(){return act().filter(w=>isDue(g(w.h))).length}
+
+/* ---- Stato UI ---- */
 let tab="learn",Q=[],i=0,shown=false,mode="hz",score=0,qv="",flt="all",editing=null;
 
 function go(t,m){
   tab=t;Q=[];i=0;shown=false;score=0;editing=null;
-  if(t==="learn"){mode="hz";Q=act().filter(w=>!g(w.h).seen).slice(0,10)}
-  else if(t==="review"){mode="hz";Q=shuffle(act().filter(w=>{const s=g(w.h);return s.wrong>0&&s.streak<2}))}
-  else if(t==="play"&&m){mode=m;Q=shuffle(act()).slice(0,10)}
+  if(t==="learn"){
+    mode="hz";
+    Q=shuffle(act().filter(w=>!g(w.h).seen)).slice(0,10);
+  }else if(t==="review"){
+    mode="hz";
+    Q=shuffle(act().filter(w=>isDue(g(w.h))));
+  }else if(t==="play"&&m){
+    mode=m;Q=shuffle(act()).slice(0,10);
+  }
   render();
 }
 
 function stat(){
-  const a=act(),seen=a.filter(w=>g(w.h).seen).length;
-  $("#stat").textContent=seen+" viste · "+(a.length-seen)+" da vedere";
+  const a=act(),seen=a.filter(w=>g(w.h).seen).length,due=dueCount();
+  $("#stat").innerHTML=`${seen} viste · ${a.length-seen} nuove`+
+    (due?`<br><b style="color:var(--acc)">${due} da ripassare</b>`:"");
+  const rb=document.querySelector('nav button[data-tab="review"]');
+  if(rb) rb.innerHTML=`Ripasso`+(due?` <span class="badge">${due}</span>`:"");
 }
 
 function render(){
-  document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.tab===tab));
+  document.querySelectorAll("nav button").forEach(b=>{
+    const on=b.dataset.tab===tab;
+    b.classList.toggle("on",on);
+    if(b.dataset.tab==="review" && !on){
+      // il badge resta anche quando non è attivo
+      const n=dueCount();
+      b.innerHTML="Ripasso"+(n?` <span class="badge">${n}</span>`:"");
+    }
+  });
   stat();
   if(tab==="list")return list();
   if(tab==="play"&&!Q.length)return playMenu();
@@ -444,31 +532,64 @@ function playMenu(){
 
 function session(){
   if(!act().length){app.innerHTML=noActive();return}
-  if(!Q.length){app.innerHTML=`<p class="empty">${tab==="learn"?"Hai già visto tutte le parole attive. Prova il ripasso.":"Nessuna parola da ripassare: non hai errori recenti."}</p>`;return}
+  if(!Q.length){
+    app.innerHTML=`<p class="empty">${
+      tab==="learn"
+        ?"Nessuna parola nuova: hai già visto tutte quelle attive."
+        :"Nessuna parola in scadenza. Torna più tardi, oppure accendi nuove parole nell'Elenco."
+    }</p>`;
+    return;
+  }
   const w=Q[i];
-  if(!w){app.innerHTML=`<div class="done"><p class="big">${score} / ${Q.length}</p><p>indovinate</p><button class="btn pri" data-act="again">Ancora</button></div>`;return}
+  if(!w){
+    app.innerHTML=`<div class="done"><p class="big">${score} / ${Q.length}</p><p>indovinate</p>
+      <button class="btn pri" data-act="again">Ancora</button></div>`;
+    return;
+  }
   const bar=Q.map((_,k)=>`<i class="${k<i?"d":k===i?"c":""}"></i>`).join("");
-  const cell=(mode==="hz"||shown)?`<div class="cell"><span class="hz">${esc(w.h)}</span></div>`:mode==="audio"?`<button class="cell spk" data-act="say" aria-label="Riascolta">♪</button>`:"";
+  const cell=(mode==="hz"||shown)
+    ?`<div class="cell"><span class="hz">${esc(w.h)}</span></div>`
+    :mode==="audio"
+      ?`<button class="cell spk" data-act="say" aria-label="Riascolta">♪</button>`
+      :"";
   const mean=(mode==="it"||shown)?`<div class="mean${shown?"":" big"}">${esc(w.m)}</div>`:"";
-  const rows=[["Componenti",w.c],["Tratti",w.t],["Trucco",w.k]].filter(r=>r[1]!==""&&r[1]!=null).map(r=>`<dt>${r[0]}</dt><dd>${esc(r[1])}</dd>`).join("");
+  const rows=[["Componenti",w.c],["Tratti",w.t],["Trucco",w.k]]
+    .filter(r=>r[1]!==""&&r[1]!=null)
+    .map(r=>`<dt>${r[0]}</dt><dd>${esc(r[1])}</dd>`).join("");
   const back=shown?`<div class="py">${esc(w.p)}</div>${rows?`<dl>${rows}</dl>`:""}`:"";
   const btns=shown
-    ?`<div class="row"><button class="btn ic" data-act="say" aria-label="Ascolta">♪</button><button class="btn no" data-act="ko">Sbagliato</button><button class="btn pri" data-act="ok">Indovinato</button></div>`
+    ?`<div class="row sr-btns">
+        <button class="btn ic" data-act="say" aria-label="Ascolta">♪</button>
+        <button class="btn sr-again" data-grade="again">Ancora<small>${ivlLabel(w.h,SR.again)}</small></button>
+        <button class="btn sr-hard"  data-grade="hard">Difficile<small>${ivlLabel(w.h,SR.hard)}</small></button>
+        <button class="btn sr-good"  data-grade="good">Bene<small>${ivlLabel(w.h,SR.good)}</small></button>
+        <button class="btn sr-easy"  data-grade="easy">Facile<small>${ivlLabel(w.h,SR.easy)}</small></button>
+      </div>`
     :`<div class="row"><button class="btn ic" data-act="say" aria-label="Ascolta">♪</button><button class="btn pri" data-act="show">Scopri</button></div>`;
-  app.innerHTML=`<div class="bar">${bar}</div>${cell}${mean}${back}${btns}<p class="hint">spazio scopri · 1 sbagliato · 2 indovinato · A ascolta</p>`;
+  app.innerHTML=`<div class="bar">${bar}</div>${cell}${mean}${back}${btns}
+    <p class="hint">spazio scopri · 1 ancora · 2 difficile · 3 bene · 4 facile · A ascolta</p>`;
   if(mode==="audio"&&!shown)setTimeout(()=>say(w.h),150);
 }
 
-function answer(ok){
-  const w=Q[i],s=DB.prog[w.h]=Object.assign({seen:0,right:0,wrong:0,streak:0},DB.prog[w.h]);
-  s.seen=1;
-  if(ok){s.right++;s.streak++;score++}else{s.wrong++;s.streak=0}
-  save();i++;shown=false;render();
+function answer(grade){
+  const w=Q[i];if(!w)return;
+  const p=DB.prog[w.h]=Object.assign(DEFAULT_SR(),DB.prog[w.h]);
+  schedule(p,grade);
+  if(grade!==SR.again) score++;
+  save();
+  // le "Ancora" rientrano in coda 3–5 carte dopo (stessa sessione)
+  if(grade===SR.again && Q.length<200){
+    const pos=Math.min(Q.length,i+3+Math.floor(Math.random()*3));
+    Q.splice(pos,0,w);
+  }
+  i++;shown=false;render();
 }
 
 function row(w,k){
-  const s=g(w.h);
-  const st=!s.seen?"<em>nuova</em>":(s.wrong>0&&s.streak<2?`<em class="ko">da ripassare</em>`:`<em>${s.right} ok</em>`);
+  const p=g(w.h);
+  const st=p.seen
+    ?`<em>${p.right||0} ok</em> · ${nextDueLabel(p)}`
+    :"<em>nuova</em>";
   return `<div class="item${w.on?"":" off"}"><input type="checkbox" class="sw" data-tog="${k}" ${w.on?"checked":""} aria-label="Attiva ${esc(w.h)}"><div class="h">${esc(w.h)}</div><div><b>${esc(w.p)}</b> <span>${esc(w.m)}</span><br>${st}</div><button class="btn sm" data-edit="${k}">Modifica</button></div>`;
 }
 
@@ -502,7 +623,22 @@ function list(){
   $("#flt").value=flt;$("#flt").onchange=e=>{flt=e.target.value;drawList()};
   drawList();
   $("#imp").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();
-    r.onload=()=>{try{const d=JSON.parse(r.result);if(Array.isArray(d.words)){DB=d;DB.prog=DB.prog||{}}else DB.prog=d;save();render()}catch(x){alert("File non valido: serve un JSON salvato da questo sito.")}};r.readAsText(f)};
+    r.onload=()=>{
+      try{
+        const d=JSON.parse(r.result);
+        if(d && Array.isArray(d.words)){
+          DB={words:d.words,prog:(d.prog&&typeof d.prog==="object")?d.prog:{},v:Math.max(4,d.v||4)};
+        }else if(d && typeof d==="object"){
+          DB.prog=d;
+        }else{
+          throw new Error("formato");
+        }
+        // migra al volo i campi SR
+        Object.keys(DB.prog).forEach(h=>g(h));
+        DB.v=Math.max(4,DB.v||4);
+        save();render();
+      }catch(x){alert("File non valido: serve un JSON salvato da questo sito.")}
+    };r.readAsText(f)};
 }
 
 function exportData(){
@@ -528,20 +664,21 @@ function saveEdit(btn){
 }
 
 document.addEventListener("click",e=>{
-  const t=e.target.closest("[data-tab],[data-m],[data-act],[data-edit]");if(!t)return;
+  const t=e.target.closest("[data-tab],[data-m],[data-act],[data-edit],[data-grade]");if(!t)return;
   if(t.dataset.tab)return go(t.dataset.tab);
   if(t.dataset.m)return go("play",t.dataset.m);
+  if(t.dataset.grade!==undefined)return answer(SR[t.dataset.grade]);
   if(t.dataset.edit!==undefined){editing=Number(t.dataset.edit);return drawList()}
   const a=t.dataset.act;
   if(a==="show"){shown=true;render()}
-  else if(a==="ok")answer(true);
-  else if(a==="ko")answer(false);
-  else if(a==="say"&&Q[i])say(Q[i].h);
-  else if(a==="again")go(tab,mode);
-  else if(a==="export")exportData();
+  else if(a==="ok")answer(SR.good)
+  else if(a==="ko")answer(SR.again)
+  else if(a==="say"&&Q[i])say(Q[i].h)
+  else if(a==="again")go(tab,mode)
+  else if(a==="export")exportData()
   else if(a==="add"){editing="new";drawList();window.scrollTo(0,0)}
   else if(a==="cancel"){editing=null;drawList()}
-  else if(a==="saveedit")saveEdit(t);
+  else if(a==="saveedit")saveEdit(t)
   else if(a==="del"){const k=Number(t.dataset.k);if(confirm("Eliminare "+DB.words[k].h+" dall'elenco?")){delete DB.prog[DB.words[k].h];DB.words.splice(k,1);save();editing=null;render()}}
   else if(a==="allon"||a==="alloff"){visible().forEach(({w})=>w.on=a==="allon");save();stat();drawList()}
 });
@@ -553,10 +690,19 @@ document.addEventListener("change",e=>{
 document.addEventListener("keydown",e=>{
   if(e.target.tagName==="INPUT"||!Q[i]||tab==="list")return;
   if(e.key===" "&&!shown){e.preventDefault();shown=true;render()}
-  else if(shown&&e.key==="1")answer(false);
-  else if(shown&&e.key==="2")answer(true);
+  else if(shown&&e.key==="1")answer(SR.again)
+  else if(shown&&e.key==="2")answer(SR.hard)
+  else if(shown&&e.key==="3")answer(SR.good)
+  else if(shown&&e.key==="4")answer(SR.easy)
   else if(e.key.toLowerCase()==="a")say(Q[i].h);
 });
+
+/* migrazione esplicita allo schema SR (v4) */
+if((DB.v||3)<4){
+  Object.keys(DB.prog).forEach(h=>g(h));
+  DB.v=4;save();
+}
+
 go("learn");
 </script>
 </body>
